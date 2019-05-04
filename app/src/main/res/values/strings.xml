@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Chamada Aluno</string>
+    <string name="descoberta_de_pares">Descoberta de Pares</string>
+    <string name="wifi">WIFI</string>
+    <string name="buscar">Buscar</string>
+    <string name="dados">Dados</string>
+    <string name="title_activity_order">Order</string>
+    <string name="status">Status</string>
+    <string name="mensagens_recebidas">Mensagens Recebidas:</string>
+</resources>

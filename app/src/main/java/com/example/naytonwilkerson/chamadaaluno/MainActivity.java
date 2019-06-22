@@ -63,10 +63,10 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if (wifiManager.isWifiEnabled()) {
                     wifiManager.setWifiEnabled(false);
-                    btnOnOff.setText("ON");
+                    btnOnOff.setText("LIGAR WIFI");
                 } else {
                     wifiManager.setWifiEnabled(true);
-                    btnOnOff.setText("OFF");
+                    btnOnOff.setText("DESLIGAR WIFI");
                 }
             }
         });
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
                 mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
                     @Override
                     public void onSuccess() {
-                        Toast.makeText(getApplicationContext(), "Conectado a " + device.deviceName, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Solicitando conexão a " + device.deviceName, Toast.LENGTH_SHORT).show();
                     }
 
                     @Override

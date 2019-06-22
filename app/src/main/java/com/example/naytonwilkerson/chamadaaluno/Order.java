@@ -1,17 +1,21 @@
 package com.example.naytonwilkerson.chamadaaluno;
 
+
 import android.content.Context;
+import android.content.Intent;
+import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
+
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,15 +24,22 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import static com.example.naytonwilkerson.chamadaaluno.Order.ClientClass.cont;
+import static com.example.naytonwilkerson.chamadaaluno.Order.ClientClass.socket;
+
+
 public class Order extends AppCompatActivity {
 
+    static  WifiManager wifiManager;
     static Button btnMandar;
     static TextView Status, presenca;
     static EditText msgNome, msgMatricula;
     static final int MESSAGE_READ = 1;
-    ClientClass clientClass;
+    WifiP2pInfo info;
+    static ClientClass clientClass;
 
-    SendReceiver sendReceiver;
+
+    static SendReceiver sendReceiver ;
 
 
     @Override
@@ -36,22 +47,33 @@ public class Order extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_order1);
 
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
         btnMandar = findViewById(R.id.sendButton2);
         msgNome =  findViewById(R.id.msgNome);
         msgMatricula = findViewById(R.id.msgMatricula);
         Status =  findViewById(R.id.Status);
         presenca = findViewById(R.id.presenca);
 
+
+
         btnMandar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                String msg ="Nome: "+ msgNome.getText().toString()+"  ";
-                msg = msg+"  Matricula: "+msgMatricula.getText().toString();
-                msgNome.setText("");
-                msgMatricula.setText("");
+                if(btnMandar.getText()=="PAGINA INICIAL"){
 
-                SendReceiver.write(msg.getBytes());
+                    Intent intent = new Intent(Order.this, MainActivity.class);
+                    startActivity(intent);
+
+                }else {
+                    String msg = "Nome: " + msgNome.getText().toString() + "  ";
+                    msg = msg + "  Matricula: " + msgMatricula.getText().toString();
+                    msgNome.setText("");
+                    msgMatricula.setText("");
+
+                    SendReceiver.write(msg.getBytes());
+                }
             }
         });
 
@@ -81,6 +103,10 @@ public class Order extends AppCompatActivity {
                     Status.setText(tempMsg);
                     presenca.setText(tempMsg);
 
+                    btnMandar.setText("PAGINA INICIAL");
+                   // Desconectado();
+                   // wifiManager.removeNetwork(0);
+
                     break;
             }
             return true;
@@ -90,7 +116,7 @@ public class Order extends AppCompatActivity {
     public static class SendReceiver extends Thread {
         private Socket socket;
         private InputStream inputStream;
-        private  static OutputStream outputStream;
+        static OutputStream outputStream;
 
 
         SendReceiver(Socket s) {
@@ -104,25 +130,35 @@ public class Order extends AppCompatActivity {
             }
         }
 
-
         @Override
         public void run()
         {
             byte[] buffer = new byte[1024];
             int bytes;
 
-            while(socket!=null){
+            while(cont == 1){
                 try {
                     bytes=inputStream.read(buffer);
                     if (bytes>0){
                         handler.obtainMessage(MESSAGE_READ,bytes,-1,buffer).sendToTarget();
+                        try {
+                            socket.close();
+                            cont = 0;
+                            Log.i("SERVER SOCKET","FECHADO!!");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                        wifiManager.setWifiEnabled(false);
+                        wifiManager.setWifiEnabled(true);
+
                     }
 
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
-        }
+     }
 
           static void write(byte[] bytes) {
 
@@ -135,22 +171,26 @@ public class Order extends AppCompatActivity {
 
     }
 
-    public class ClientClass extends Thread{
-        Socket socket;
-        String hostAdd;
+    public static class ClientClass extends Thread{
+       static Socket socket;
+       static String hostAdd;
+       static int cont = 1;
 
         ClientClass(InetAddress hostAddress)
         {
-            hostAdd=hostAddress.getHostAddress();
+            hostAdd = hostAddress.getHostAddress();
             socket = new Socket();
         }
 
         @Override
         public void run() {
             try {
-                socket.connect(new InetSocketAddress(hostAdd,8888),500);
-                sendReceiver = new Order.SendReceiver(socket);
-                sendReceiver.start();
+
+                    socket.connect(new InetSocketAddress(hostAdd, 8888), 1000);
+                    Log.i("SERVER SOCKET","ABERTO!!");
+                    cont =1;
+                    sendReceiver = new Order.SendReceiver(socket);
+                    sendReceiver.start();
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -158,7 +198,6 @@ public class Order extends AppCompatActivity {
         }
 
     }
-
 
 }
 
